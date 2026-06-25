@@ -1,8 +1,6 @@
-# app.py
-
 import streamlit as st
 import pandas as pd
-import pickle
+import joblib
 import nltk
 import string
 
@@ -20,20 +18,18 @@ st.set_page_config(
 )
 
 # =====================================================
-# LOAD MODEL
-# =====================================================
-
-import joblib
-
-model = joblib.load("spam_classifier.pkl")
-
-# =====================================================
-# NLTK
+# DOWNLOAD NLTK
 # =====================================================
 
 nltk.download("punkt", quiet=True)
 nltk.download("punkt_tab", quiet=True)
 nltk.download("stopwords", quiet=True)
+
+# =====================================================
+# LOAD MODEL
+# =====================================================
+
+model = joblib.load("spam_classifier.pkl")
 
 ps = PorterStemmer()
 
@@ -47,215 +43,119 @@ def transform_text(text):
 
     words = nltk.word_tokenize(text)
 
-    filtered = []
+    words = [w for w in words if w.isalnum()]
 
-    for word in words:
-        if word.isalnum():
-            filtered.append(word)
+    words = [
+        w for w in words
+        if w not in stopwords.words("english")
+        and w not in string.punctuation
+    ]
 
-    words = []
+    words = [ps.stem(w) for w in words]
 
-    for word in filtered:
-        if word not in stopwords.words('english') and word not in string.punctuation:
-            words.append(word)
-
-    stemmed = []
-
-    for word in words:
-        stemmed.append(ps.stem(word))
-
-    return " ".join(stemmed)
+    return " ".join(words)
 
 # =====================================================
-# CSS
+# CUSTOM CSS
 # =====================================================
 
 st.markdown("""
 <style>
 
-/* Background */
-
 .stApp{
-    background: linear-gradient(
-        135deg,
-        #0f172a,
-        #1e293b,
-        #334155
-    );
+background:linear-gradient(135deg,#0f172a,#1e293b,#334155);
 }
 
-/* Sidebar */
-
 section[data-testid="stSidebar"]{
-    background:#111827;
+background:#111827;
 }
 
 section[data-testid="stSidebar"] *{
-    color:white !important;
+color:white!important;
 }
 
-/* Title */
-
 .main-title{
-    text-align:center;
-    font-size:85px;
-    font-weight:900;
-
-    background: linear-gradient(
-        90deg,
-        #ff0000,
-        #ff7300,
-        #ffee00,
-        #00ff44,
-        #00e1ff,
-        #0051ff,
-        #8f00ff
-    );
-
-    -webkit-background-clip:text;
-    -webkit-text-fill-color:transparent;
+text-align:center;
+font-size:70px;
+font-weight:900;
+background:linear-gradient(90deg,#ff0000,#ff7300,#ffee00,#00ff44,#00e1ff,#0051ff,#8f00ff);
+-webkit-background-clip:text;
+-webkit-text-fill-color:transparent;
 }
 
 .sub-title{
-    text-align:center;
-    color:white;
-    font-size:26px;
-    margin-bottom:20px;
-}
-
-/* Text Area */
-
-textarea{
-    font-size:28px !important;
-    font-weight:600 !important;
-    color:black !important;
-    background:white !important;
-}
-
-textarea::placeholder{
-    font-size:22px !important;
+text-align:center;
+font-size:22px;
+color:white;
+margin-bottom:20px;
 }
 
 [data-testid="stTextArea"] textarea{
-    border-radius:20px !important;
-    border:3px solid #38bdf8 !important;
+background:white!important;
+color:black!important;
+font-size:22px!important;
+font-weight:600;
+border-radius:18px!important;
+border:3px solid #38bdf8!important;
 }
 
-/* Button */
-
-.stButton > button{
-
-    width:100%;
-    height:75px;
-
-    border:none;
-    border-radius:20px;
-
-    font-size:24px;
-    font-weight:bold;
-
-    color:white;
-
-    background:linear-gradient(
-        90deg,
-        #ff0080,
-        #7928ca,
-        #0070f3
-    );
+.stButton>button{
+width:100%;
+height:70px;
+border:none;
+border-radius:18px;
+font-size:22px;
+font-weight:bold;
+color:white;
+background:linear-gradient(90deg,#ff0080,#7928ca,#0070f3);
 }
-
-.stButton > button:hover{
-
-    transform:scale(1.02);
-
-    box-shadow:0px 0px 20px #38bdf8;
-}
-
-/* Metrics */
 
 [data-testid="stMetric"]{
-    background:#1e293b;
-    padding:15px;
-    border-radius:15px;
-    border:1px solid #475569;
-}
-
-[data-testid="stMetricValue"]{
-    color:white !important;
-    font-size:45px !important;
-    font-weight:bold !important;
+background:#263247;
+padding:18px;
+border-radius:15px;
+border:2px solid #3b82f6;
 }
 
 [data-testid="stMetricLabel"]{
-    color:#38bdf8 !important;
-    font-size:20px !important;
+color:#9cc9ff!important;
+font-weight:bold;
 }
 
-/* Result Cards */
+[data-testid="stMetricValue"]{
+color:white!important;
+font-size:32px!important;
+font-weight:bold;
+}
 
 .spam-card{
-    background:#ef4444;
-    padding:30px;
-    border-radius:20px;
-    text-align:center;
-    color:white;
-    font-size:40px;
-    font-weight:bold;
+background:#ef4444;
+padding:25px;
+border-radius:18px;
+text-align:center;
+color:white;
+font-size:34px;
+font-weight:bold;
 }
 
 .ham-card{
-    background:#22c55e;
-    padding:30px;
-    border-radius:20px;
-    text-align:center;
-    color:white;
-    font-size:40px;
-    font-weight:bold;
+background:#22c55e;
+padding:25px;
+border-radius:18px;
+text-align:center;
+color:white;
+font-size:34px;
+font-weight:bold;
 }
-
-/* Footer */
 
 .footer{
-    text-align:center;
-    color:white;
-    padding:30px;
+text-align:center;
+color:white;
+padding:20px;
 }
-
-.footer h2{
-    font-size:38px;
-}
-
-.footer h3{
-    font-size:24px;
-}
-
-.footer p{
-    font-size:18px;
-}
-            
-/* Success Message */
-
-.stSuccess{
-    font-size:24px !important;
-    font-weight:bold !important;
-}
-
-/* Warning Message */
-
-.stWarning{
-    font-size:24px !important;
-    font-weight:bold !important;
-}
-
-/* Error Message */
-
-.stError{
-    font-size:24px !important;
-    font-weight:bold !important;
-}            
 
 </style>
-""", unsafe_allow_html=True)
+""",unsafe_allow_html=True)
 
 # =====================================================
 # SIDEBAR
@@ -265,7 +165,7 @@ with st.sidebar:
 
     st.header("📊 Project Information")
 
-    st.success("Accuracy: 96.81%")
+    st.success("Accuracy : 96.81%")
 
     st.markdown("""
 ### 🤖 Model
@@ -273,15 +173,14 @@ Multinomial Naive Bayes
 
 ### ⚙ Features
 - TF-IDF
-- Message Length
-- Word Count
 - Character Count
+- Word Count
 - Sentence Count
 
 ### 🎯 Applications
 - SMS Spam Detection
 - Email Filtering
-- NLP Projects
+- NLP
 """)
 
 # =====================================================
@@ -289,13 +188,13 @@ Multinomial Naive Bayes
 # =====================================================
 
 st.markdown(
-    "<div class='main-title'>📩 SMS Spam Detection System</div>",
-    unsafe_allow_html=True
+"<div class='main-title'>📩 SMS Spam Detection System</div>",
+unsafe_allow_html=True
 )
 
 st.markdown(
-    "<div class='sub-title'>AI Powered Spam Message Classification using NLP & Machine Learning</div>",
-    unsafe_allow_html=True
+"<div class='sub-title'>AI Powered Spam Message Classification using NLP & Machine Learning</div>",
+unsafe_allow_html=True
 )
 
 st.divider()
@@ -305,48 +204,75 @@ st.divider()
 # =====================================================
 
 message = st.text_area(
-    "✍ Enter SMS Message",
-    height=320,
-    placeholder="Type your SMS message here..."
+"✍ Enter SMS Message",
+height=260,
+placeholder="Type your SMS here..."
 )
 
-# =====================================================
-# LIVE METRICS
-# =====================================================
+sentence_count = len([s for s in message.split(".") if s.strip()])
 
 if message:
 
-    col1, col2, col3 = st.columns(3)
+    c1,c2,c3 = st.columns(3)
 
-    with col1:
-        st.metric("📝 Characters", len(message))
+    with c1:
+        st.metric("📝 Characters",len(message))
 
-    with col2:
-        st.metric("📖 Words", len(message.split()))
+    with c2:
+        st.metric("📖 Words",len(message.split()))
 
-    with col3:
-        st.metric("📄 Sentences", len(nltk.sent_tokenize(message)))
+    with c3:
+        st.metric("📄 Sentences",sentence_count)
+
+st.markdown("<br>",unsafe_allow_html=True)
 
 # =====================================================
-# PREDICT
+# PREDICTION
 # =====================================================
 
-if st.button("🚀 Predict Message"):
+if st.button("🚀 Predict Message", use_container_width=True):
+
+    if message.strip() == "":
+        st.error("⚠ Please enter an SMS message.")
+        st.stop()
 
     transformed_message = transform_text(message)
-    sentence_count = len([s for s in message.split(".") if s.strip()])
 
     input_df = pd.DataFrame({
-        "transformed_message":[transformed_message],
-        "message_length":[len(message)],
-        "word_count":[len(message.split())],
-        "char_count":[len(message)],
+        "transformed_message": [transformed_message],
+        "message_length": [len(message)],
+        "word_count": [len(message.split())],
+        "char_count": [len(message)],
         "sentence_count": [sentence_count]
     })
 
     prediction = model.predict(input_df)[0]
 
     st.divider()
+
+    # =====================================================
+    # CONFIDENCE SCORE
+    # =====================================================
+
+    try:
+        probabilities = model.predict_proba(input_df)[0]
+        confidence = max(probabilities) * 100
+
+        st.markdown("## 🎯 Confidence Score")
+
+        st.progress(confidence / 100)
+
+        st.metric(
+            "Confidence",
+            f"{confidence:.2f}%"
+        )
+
+    except Exception:
+        st.info("Confidence score is not available for this model.")
+
+    # =====================================================
+    # RESULT
+    # =====================================================
 
     if prediction == 1:
 
@@ -356,11 +282,15 @@ if st.button("🚀 Predict Message"):
         </div>
         """, unsafe_allow_html=True)
 
-        st.warning(
-            "This message appears suspicious and may contain spam content."
-        )
+        st.error("""
+⚠ This message appears suspicious.
 
-        st.snow()
+• Avoid clicking unknown links.
+
+• Never share OTPs or passwords.
+
+• Do not disclose banking information.
+""")
 
     else:
 
@@ -370,141 +300,11 @@ if st.button("🚀 Predict Message"):
         </div>
         """, unsafe_allow_html=True)
 
-        st.success(
-            "This message appears legitimate and safe."
-        )
+        st.success("""
+This message appears genuine and safe.
 
-        st.balloons()
-
-
-# =====================================================
-# LIVE METRICS
-# =====================================================
-
-if message:
-
-    col1, col2, col3 = st.columns(3)
-
-    with col1:
-        st.metric(
-            "📝 Characters",
-            len(message)
-        )
-
-    with col2:
-        st.metric(
-            "📖 Words",
-            len(message.split())
-        )
-
-    with col3:
-        sentence_count = len([s for s in message.split(".") if s.strip()])
-
-        st.metric("📄 Sentences", sentence_count)
-    
-
-st.markdown("<br>", unsafe_allow_html=True)
-
-# =====================================================
-# PREDICT BUTTON
-# =====================================================
-
-predict = st.button(
-    "🚀 Predict Message",
-    use_container_width=True
-)
-
-# =====================================================
-# PREDICTION
-# =====================================================
-
-if predict:
-
-    if message.strip() == "":
-
-        st.error("⚠ Please enter a message.")
-
-    else:
-
-        transformed_message = transform_text(message)
-
-        input_df = pd.DataFrame({
-            "transformed_message":[transformed_message],
-            "message_length":[len(message)],
-            "word_count":[len(message.split())],
-            "char_count":[len(message)],
-            "sentence_count":[len(nltk.sent_tokenize(message))]
-        })
-
-        prediction = model.predict(input_df)[0]
-
-        st.divider()
-
-        # ==========================================
-        # CONFIDENCE SCORE
-        # ==========================================
-
-        try:
-
-            probabilities = model.predict_proba(input_df)[0]
-
-            confidence = max(probabilities) * 100
-
-            st.metric(
-                "🎯 Confidence Score",
-                f"{confidence:.2f}%"
-            )
-
-        except:
-            pass
-
-        # ==========================================
-        # SPAM RESULT
-        # ==========================================
-
-        if prediction == 1:
-
-            st.markdown("""
-            <div class='spam-card'>
-            🚨 SPAM MESSAGE DETECTED
-            </div>
-            """,
-            unsafe_allow_html=True)
-
-            st.warning(
-                """
-                This message appears suspicious.
-
-                Avoid clicking unknown links,
-                sharing OTPs,
-                passwords,
-                or banking details.
-                """
-            )
-
-            st.snow()
-
-        # ==========================================
-        # HAM RESULT
-        # ==========================================
-
-        else:
-
-            st.markdown("""
-            <div class='ham-card'>
-            ✅ HAM MESSAGE DETECTED
-            </div>
-            """,
-            unsafe_allow_html=True)
-
-            st.success(
-                """
-                This message appears legitimate
-                and safe.
-                """
-            )
-
-            st.balloons()
+No suspicious content detected.
+""")
 
 # =====================================================
 # PROJECT SUMMARY
@@ -512,19 +312,19 @@ if predict:
 
 st.divider()
 
-col1, col2, col3, col4 = st.columns(4)
+m1, m2, m3, m4 = st.columns(4)
 
-with col1:
-    st.metric("Model", "NB")
+with m1:
+    st.metric("🤖 Model", "Multinomial NB")
 
-with col2:
-    st.metric("Features", "5")
+with m2:
+    st.metric("📊 TF-IDF", "3000")
 
-with col3:
-    st.metric("TF-IDF", "3000")
+with m3:
+    st.metric("⚙ Features", "5")
 
-with col4:
-    st.metric("Accuracy", "96.81%")
+with m4:
+    st.metric("🎯 Accuracy", "96.81%")
 
 # =====================================================
 # FOOTER
@@ -535,22 +335,17 @@ st.divider()
 st.markdown("""
 <div class="footer">
 
-<h1>
-🚀 Khaja Mainuddin
-</h1>
+<h2>🚀 Developed by Shaik Khaja Mainuddin</h2>
 
-<h3>
-Artificial Intelligence & Data Science Engineer
-</h3>
+<h3>Artificial Intelligence & Data Science Engineer</h3>
 
 <p>
-Machine Learning • NLP • Data Science • Python • Streamlit
+Machine Learning • NLP • Python • Streamlit
 </p>
 
 <p>
-SMS Spam Detection using TF-IDF and Multinomial Naive Bayes
+SMS Spam Detection using TF-IDF & Multinomial Naive Bayes
 </p>
 
 </div>
-""",
-unsafe_allow_html=True)
+""", unsafe_allow_html=True)
