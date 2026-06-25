@@ -32,6 +32,7 @@ model = joblib.load("spam_classifier.pkl")
 # =====================================================
 
 nltk.download("punkt", quiet=True)
+nltk.download("punkt_tab", quiet=True)
 nltk.download("stopwords", quiet=True)
 
 ps = PorterStemmer()
@@ -333,13 +334,14 @@ if message:
 if st.button("🚀 Predict Message"):
 
     transformed_message = transform_text(message)
+    sentence_count = len([s for s in message.split(".") if s.strip()])
 
     input_df = pd.DataFrame({
         "transformed_message":[transformed_message],
         "message_length":[len(message)],
         "word_count":[len(message.split())],
         "char_count":[len(message)],
-        "sentence_count":[len(nltk.sent_tokenize(message))]
+        "sentence_count": [sentence_count]
     })
 
     prediction = model.predict(input_df)[0]
@@ -374,25 +376,6 @@ if st.button("🚀 Predict Message"):
 
         st.balloons()
 
-# =====================================================
-# FOOTER
-# =====================================================
-
-st.divider()
-
-st.markdown("""
-<div class="footer">
-
-<h2>🚀 Developed & Deployed by Khaja Mainuddin</h2>
-
-<h3>B.Tech Artificial Intelligence & Data Science</h3>
-
-<p>
-Powered by Streamlit • NLP • TF-IDF • Multinomial Naive Bayes
-</p>
-
-</div>
-""", unsafe_allow_html=True)
 
 # =====================================================
 # LIVE METRICS
@@ -415,10 +398,10 @@ if message:
         )
 
     with col3:
-        st.metric(
-            "📄 Sentences",
-            len(nltk.sent_tokenize(message))
-        )
+        sentence_count = len([s for s in message.split(".") if s.strip()])
+
+        st.metric("📄 Sentences", sentence_count)
+    
 
 st.markdown("<br>", unsafe_allow_html=True)
 
